@@ -4,6 +4,8 @@
 
 MS2109系USBキャプチャを使っているユーザー向け[mono-to-stereo](https://github.com/ToadKing/mono-to-stereo)のGUIで操作できる版。
 
+![image](https://user-images.githubusercontent.com/92087784/193593505-111b864e-fe1a-4d71-8e2c-73be9d952ec4.png)
+
 
 ## インストール方法
 
