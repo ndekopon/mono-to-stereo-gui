@@ -2,7 +2,7 @@
 
 ## 概要
 
-MS2109系USBキャプチャを使っているユーザー向け`mono-to-stereo`のGUIで操作できる版。
+MS2109系USBキャプチャを使っているユーザー向け[mono-to-stereo](https://github.com/ToadKing/mono-to-stereo)のGUIで操作できる版。
 
 
 ## インストール方法
@@ -25,4 +25,24 @@ Releasesから自分のPCにあったアーキテクチャ(x86/x64/arm/arm64)の
 
 手元の環境では入力/出力の速度が一定でないのか、出力バッファが追いついたり離れすぎたりするので、
 閾値を超えたら都度1フレームをスキップしたり、前の1フレームを重複させたりして違和感が減るような処理を入れた。
+
+プログラム自体に問題点があったら [@ndekopon](https://twitter.com/ndekopon) へどうぞ。
+
+
+## テスト環境
+
+下記環境で検証し、音がある程度問題なく聞こえることを確認。
+
+- OS: Windows10 21H2(19044.2006)
+- CPU: AMD Ryzen 5 5600X
+
+
+## ライセンス
+
+[MIT license](https://choosealicense.com/licenses/mit/)
+
+
+## 謝辞
+
+音声処理部分は [mono-to-stereo]([mono-to-stereo](https://github.com/ToadKing/mono-to-stereo) を参考にしました。
 
