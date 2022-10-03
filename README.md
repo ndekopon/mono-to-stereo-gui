@@ -44,5 +44,5 @@ Releasesから自分のPCにあったアーキテクチャ(x86/x64/arm/arm64)の
 
 ## 謝辞
 
-音声処理部分は [mono-to-stereo]([mono-to-stereo](https://github.com/ToadKing/mono-to-stereo) を参考にしました。
+音声処理部分は [mono-to-stereo](https://github.com/ToadKing/mono-to-stereo) を参考にしました。
 
