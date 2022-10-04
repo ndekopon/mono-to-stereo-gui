@@ -11,7 +11,7 @@ namespace app {
 		, names_()
 		, client_(nullptr)
 		, capture_client_(nullptr)
-		, format_({ WAVE_FORMAT_IEEE_FLOAT, 1, 96000, 384000, 4, 32, 0 })
+		, format_({ WAVE_FORMAT_IEEE_FLOAT, CAPTURE_CHANNELS, CAPTURE_SAMPLES, CAPTURE_SAMPLES * CAPTURE_CHANNELS * 4, CAPTURE_CHANNELS * 4, 32, 0 })
 		, buffersize_(0)
 		, event_(NULL)
 	{
@@ -28,7 +28,7 @@ namespace app {
 	bool capture::init()
 	{
 		wlog("capture::init");
-		devices_ = get_mmdevices(eCapture, 1, 16, 96000, format_);
+		devices_ = get_mmdevices(eCapture, CAPTURE_CHANNELS, 16, CAPTURE_SAMPLES, format_);
 		names_ = get_mmdevices_name(devices_);
 		event_ = ::CreateEventW(NULL, FALSE, FALSE, NULL);
 		if (event_ == NULL)

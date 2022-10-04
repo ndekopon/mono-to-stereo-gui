@@ -24,4 +24,9 @@ namespace app {
 	constexpr UINT CWM_TASKTRAY = WM_APP + 1;
 	constexpr UINT CWM_INIT_COMPLETE = WM_APP + 2;
 	constexpr UINT CWM_STATS_UPDATE = WM_APP + 3;
+
+	constexpr UINT32 RENDER_SAMPLES = 48000;
+	constexpr UINT32 RENDER_CHANNELS = 2;
+	constexpr UINT32 CAPTURE_SAMPLES = 96000;
+	constexpr UINT32 CAPTURE_CHANNELS = 1;
 }

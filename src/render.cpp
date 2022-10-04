@@ -11,7 +11,7 @@ namespace app {
 		, names_()
 		, client_(nullptr)
 		, render_client_(nullptr)
-		, format_({ WAVE_FORMAT_IEEE_FLOAT, 2, 48000, 384000, 8, 32, 0 })
+		, format_({ WAVE_FORMAT_IEEE_FLOAT, RENDER_CHANNELS, RENDER_SAMPLES, RENDER_SAMPLES * RENDER_CHANNELS * 4, RENDER_CHANNELS * 4, 32, 0 })
 		, event_(NULL)
 		, buffersize_(0)
 		, blockalign_(0)
@@ -29,7 +29,7 @@ namespace app {
 	bool render::init()
 	{
 		wlog("render::init");
-		devices_ = get_mmdevices(eRender, 2, 16, 48000, format_);
+		devices_ = get_mmdevices(eRender, RENDER_CHANNELS, 16, RENDER_SAMPLES, format_);
 		names_ = get_mmdevices_name(devices_);
 		event_ = ::CreateEventW(NULL, FALSE, FALSE, NULL);
 		if (event_ == NULL)
