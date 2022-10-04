@@ -79,10 +79,6 @@ namespace app {
 							event_stats_
 						};
 
-						uint64_t render_count = 0;
-						uint64_t capture_count = 0;
-						uint64_t old_diff = 0;
-
 						while (true)
 						{
 
@@ -103,17 +99,10 @@ namespace app {
 							else if (id == WAIT_OBJECT_0 + 2)
 							{
 								ren.proc_buffer(buffer);
-								render_count++;
-								uint64_t diff = render_count - capture_count;
-								if (diff != old_diff)
-								{
-									old_diff = diff;
-								}
 							}
 							else if (id == WAIT_OBJECT_0 + 3)
 							{
 								cap.proc_buffer(buffer);
-								capture_count++;
 							}
 							else if (id == WAIT_OBJECT_0 + 4)
 							{
