@@ -31,6 +31,89 @@ namespace
 
 		return result;
 	}
+
+	std::vector<IMMDevice*> get_all_mmdevices(EDataFlow _dataflow)
+	{
+		HRESULT hr;
+		std::vector<IMMDevice*> devices;
+		IMMDeviceEnumerator* enumrator = NULL;
+		IMMDeviceCollection* collection = NULL;
+
+		hr = ::CoCreateInstance(__uuidof(::MMDeviceEnumerator), NULL, CLSCTX_ALL, IID_PPV_ARGS(&enumrator));
+		if (hr != S_OK)
+		{
+			return devices;
+		}
+
+		// コレクション取得
+		hr = enumrator->EnumAudioEndpoints(_dataflow, DEVICE_STATE_ACTIVE, &collection);
+		if (hr == S_OK)
+		{
+			UINT count = 0;
+			hr = collection->GetCount(&count);
+			if (hr == S_OK && count > 0)
+			{
+				for (ULONG i = 0; i < count; i++)
+				{
+					IMMDevice* device = NULL;
+					hr = collection->Item(i, &device);
+					if (hr == S_OK)
+					{
+						devices.push_back(device);
+					}
+				}
+			}
+			collection->Release();
+		}
+		enumrator->Release();
+		return devices;
+	}
+
+	bool is_format_supported(IMMDevice *_device, const WAVEFORMATEX& _format)
+	{
+		bool rc = false;
+		HRESULT hr;
+		IAudioClient* client = NULL;
+		hr = _device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&client);
+		if (hr == S_OK)
+		{
+			WAVEFORMATEX* closestmatch_format = NULL;
+			hr = client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, &_format, &closestmatch_format);
+			if (closestmatch_format) ::CoTaskMemFree(closestmatch_format);
+			if (hr == S_OK) rc = true;
+			client->Release();
+		}
+		return rc;
+	}
+
+	bool is_deviceformat_matched(IMMDevice *_device, WORD _channel, WORD _bits_per_sample, DWORD _samples_per_sec)
+	{
+		bool rc = false;
+		HRESULT hr;
+		IPropertyStore* store = NULL;
+		// プロパティストアを開く
+		hr = _device->OpenPropertyStore(STGM_READ, &store);
+		if (hr == S_OK)
+		{
+			PROPVARIANT v;
+			::PropVariantInit(&v);
+			hr = store->GetValue(PKEY_AudioEngine_DeviceFormat, &v);
+			if (SUCCEEDED(hr) && v.vt == VT_BLOB)
+			{
+				auto format = reinterpret_cast<PWAVEFORMATEX>(v.blob.pBlobData);
+				if (format->nChannels == _channel &&
+					format->wBitsPerSample == _bits_per_sample &&
+					format->nSamplesPerSec == _samples_per_sec)
+				{
+					rc = true;
+				}
+			}
+			::PropVariantClear(&v);
+		}
+		store->Release();
+
+		return rc;
+	}
 }
 
 namespace app
@@ -38,84 +121,30 @@ namespace app
 
 	std::vector<IMMDevice*> get_mmdevices(EDataFlow _dataflow, WORD _channel, WORD _bits_per_sample, DWORD _samples_per_sec, const WAVEFORMATEX& _format)
 	{
-		std::vector<IMMDevice*> devices;
 		HRESULT hr;
-		IMMDeviceEnumerator* enumrator = NULL;
+		std::vector<IMMDevice*> devices;
 
-		hr = ::CoCreateInstance(__uuidof(::MMDeviceEnumerator), NULL, CLSCTX_ALL, IID_PPV_ARGS(&enumrator));
-		if (hr == S_OK)
+		for (auto device : get_all_mmdevices(_dataflow))
 		{
-			// キャプチャーデバイスを列挙
-			IMMDeviceCollection* collection = NULL;
-			hr = enumrator->EnumAudioEndpoints(_dataflow, DEVICE_STATE_ACTIVE, &collection);
-			if (hr == S_OK)
+			if (is_format_supported(device, _format))
 			{
-				UINT count = 0;
-				hr = collection->GetCount(&count);
-				if (!FAILED(hr) && count > 0)
+				if (_dataflow == eRender)
 				{
-					for (ULONG i = 0; i < count; i++)
+					devices.push_back(device);
+				}
+				else if (_dataflow == eCapture)
+				{
+					if (is_deviceformat_matched(device, _channel, _bits_per_sample, _samples_per_sec))
 					{
-						IMMDevice* device = NULL;
-						bool matched = false;
-						hr = collection->Item(i, &device);
-						if (hr == S_OK)
-						{
-							// デバイスがフォーマットをサポートしているか
-							IAudioClient* client = NULL;
-							hr = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&client);
-							if (hr == S_OK)
-							{
-								WAVEFORMATEX *closestmatch_format = NULL;
-								hr = client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, &_format, &closestmatch_format);
-								if (closestmatch_format) ::CoTaskMemFree(closestmatch_format);
-								if (hr == S_OK)
-								{
-
-									if (_dataflow == eRender)
-									{
-										devices.push_back(device);
-										matched = true;
-									}
-									else if (_dataflow == eCapture)
-									{
-										// プロパティストアを開く
-										IPropertyStore* store = NULL;
-										hr = device->OpenPropertyStore(STGM_READ, &store);
-										if (hr == S_OK)
-										{
-											PROPVARIANT v;
-											::PropVariantInit(&v);
-											hr = store->GetValue(PKEY_AudioEngine_DeviceFormat, &v);
-											if (SUCCEEDED(hr))
-											{
-												auto format = reinterpret_cast<PWAVEFORMATEX>(v.blob.pBlobData);
-												if (format->nChannels == _channel &&
-													format->wBitsPerSample == _bits_per_sample &&
-													format->nSamplesPerSec == _samples_per_sec)
-												{
-													devices.push_back(device);
-													matched = true;
-												}
-											}
-											::PropVariantClear(&v);
-										}
-										store->Release();
-									}
-								}
-								client->Release();
-							}
-
-
-
-							// 一致しなかったデバイスは解放
-							if (!matched) device->Release();
-						}
+						devices.push_back(device);
 					}
 				}
-				if (collection) collection->Release();
 			}
-			if (enumrator) enumrator->Release();
+
+			if (std::find(devices.begin(), devices.end(), device) == devices.end())
+			{
+				device->Release();
+			}
 		}
 		return devices;
 	}
