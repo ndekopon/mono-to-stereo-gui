@@ -42,7 +42,7 @@ namespace app {
 			wlog("  capture device not found.");
 			return false;
 		}
-		wlog(" success.");
+		wlog("  success.");
 		return true;
 	}
 

@@ -69,7 +69,7 @@ namespace app {
 					HANDLE task = AvSetMmThreadCharacteristicsW(L"Audio", &task_index);
 					if (NULL != task)
 					{
-						sample_buffer buffer;
+						sample_buffer buffer(10, 10);
 
 						HANDLE events[] = {
 							event_close_,

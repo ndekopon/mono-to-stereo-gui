@@ -15,9 +15,11 @@ namespace app
 		UINT32 last_read_;
 		UINT64 skip_count_;
 		UINT64 duplicate_count_;
+		UINT32 skip_threshold_;
+		UINT32 duplicate_threshold_;
 
 	public:
-		sample_buffer();
+		sample_buffer(UINT32, UINT32);
 		~sample_buffer();
 
 		void set(BYTE *, UINT32);
