@@ -22,6 +22,7 @@ namespace app
 		std::wstring capture_name_;
 		std::vector<std::wstring> render_names_;
 		std::vector<std::wstring> capture_names_;
+		bool reverse_channel_;
 
 		static const wchar_t* window_class_;
 		static const wchar_t* window_title_;

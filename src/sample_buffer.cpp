@@ -39,10 +39,10 @@ namespace
 namespace app
 {
 
-	sample_buffer::sample_buffer(UINT32 _duplicate_threshold, UINT32 _threashold_interval)
+	sample_buffer::sample_buffer(UINT32 _duplicate_threshold, UINT32 _threashold_interval, bool _reverse_channel)
 		: buffer_(static_cast<size_t>(RENDER_SAMPLES * 8), 0)
-		, last_write_(1)
-		, last_read_(RENDER_SAMPLES - 480 * 3)
+		, last_write_(_reverse_channel ? 0 : 1)
+		, last_read_(RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * 30) // 初回は30ms遅延入れておく
 		, skip_count_(0)
 		, duplicate_count_(0)
 		, skip_threshold_(_duplicate_threshold + _threashold_interval)
@@ -78,8 +78,8 @@ namespace app
 	{
 		auto m = last_read_;
 		auto w = last_write_ / 2;
-		auto wl = (w + RENDER_SAMPLES - 48 * skip_threshold_) % RENDER_SAMPLES;
-		auto wg = (w + RENDER_SAMPLES - 48 * duplicate_threshold_) % RENDER_SAMPLES;
+		auto wl = (w + RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * skip_threshold_) % RENDER_SAMPLES;
+		auto wg = (w + RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * duplicate_threshold_) % RENDER_SAMPLES;
 		if (render_lesser((m + _frames) % RENDER_SAMPLES, wl))
 		{
 			m += 1;

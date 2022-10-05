@@ -25,5 +25,8 @@ namespace app
 
 		bool set_capture_device(const std::wstring& _device);
 		std::wstring get_capture_device();
+
+		bool set_reverse_channel(bool);
+		bool get_reverse_channel();
 	};
 }

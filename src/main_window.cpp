@@ -37,6 +37,7 @@ namespace app
 {
 	constexpr UINT MID_EXIT = 0;
 	constexpr UINT MID_RESET = 1;
+	constexpr UINT MID_TOGGLE_REVERSE_CHANNEL = 2;
 	constexpr UINT MID_RENDER_NONE = 31;
 	constexpr UINT MID_RENDER_0 = 32;
 	constexpr UINT MID_CAPTURE_NONE = 63;
@@ -56,6 +57,7 @@ namespace app
 		, capture_name_()
 		, render_names_()
 		, capture_names_()
+		, reverse_channel_(false)
 	{
 	}
 
@@ -231,6 +233,9 @@ namespace app
 		mi.dwTypeData = menu_capture_string;
 		::InsertMenuItemW(menu, -1, TRUE, &mi);
 
+		// reverse channel
+		menu_checkeditem_create(menu, MID_TOGGLE_REVERSE_CHANNEL, L"reverse channel", reverse_channel_);
+
 		// セパレーター
 		menu_separator_create(menu);
 
@@ -272,9 +277,10 @@ namespace app
 			// configから読み出し
 			render_name_ = config_ini_.get_render_device();
 			capture_name_ = config_ini_.get_capture_device();
+			reverse_channel_ = config_ini_.get_reverse_channel();
 
 			// スレッド開始
-			if (!worker_thread_.run(window_, render_name_, capture_name_)) return -1;
+			if (!worker_thread_.run(window_, render_name_, capture_name_, reverse_channel_)) return -1;
 
 			// タイマー設定
 			::SetTimer(window_, 1, 1000, nullptr);
@@ -316,7 +322,13 @@ namespace app
 				}
 				if (id == MID_RESET)
 				{
-					worker_thread_.reset(render_name_, capture_name_);
+					worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
+				}
+				if (id == MID_TOGGLE_REVERSE_CHANNEL)
+				{
+					reverse_channel_ = !reverse_channel_;
+					config_ini_.set_reverse_channel(reverse_channel_);
+					worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
 				}
 				if (MID_RENDER_NONE <= id && id < MID_RENDER_0 + render_names_.size())
 				{
@@ -330,7 +342,7 @@ namespace app
 					{
 						render_name_ = new_device;
 						config_ini_.set_render_device(render_name_);
-						worker_thread_.reset(render_name_, capture_name_);
+						worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
 					}
 				}
 				if (MID_CAPTURE_NONE <= id && id < MID_CAPTURE_0 + capture_names_.size())
@@ -345,7 +357,7 @@ namespace app
 					{
 						capture_name_ = new_device;
 						config_ini_.set_capture_device(capture_name_);
-						worker_thread_.reset(render_name_, capture_name_);
+						worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
 					}
 				}
 			}

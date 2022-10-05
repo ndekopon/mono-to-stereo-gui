@@ -22,6 +22,7 @@ namespace app
 		std::wstring capture_name_;
 		std::vector<std::wstring> render_names_;
 		std::vector<std::wstring> capture_names_;
+		bool reverse_channel_;
 		HANDLE event_reset_;
 		HANDLE event_close_;
 		HANDLE event_stats_;
@@ -44,10 +45,10 @@ namespace app
 		worker_thread(worker_thread&&) = delete;
 		worker_thread& operator = (worker_thread&&) = delete;
 
-		bool run(HWND, const std::wstring &, const std::wstring &);
+		bool run(HWND, const std::wstring &, const std::wstring &, bool);
 		void stop();
 
-		void reset(const std::wstring &, const std::wstring &);
+		void reset(const std::wstring &, const std::wstring &, bool);
 
 		void stats();
 		std::array<UINT64, 2> get_stats();
@@ -56,5 +57,6 @@ namespace app
 		std::vector<std::wstring> get_capture_names();
 		std::wstring get_render_name();
 		std::wstring get_capture_name();
+		bool get_reverse_channel();
 	};
 }

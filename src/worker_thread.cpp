@@ -21,6 +21,7 @@ namespace app {
 		, stats_mtx_()
 		, render_names_()
 		, capture_names_()
+		, reverse_channel_(false)
 		, event_close_(NULL)
 		, event_reset_(NULL)
 		, event_stats_(NULL)
@@ -69,7 +70,7 @@ namespace app {
 					HANDLE task = AvSetMmThreadCharacteristicsW(L"Audio", &task_index);
 					if (NULL != task)
 					{
-						sample_buffer buffer(10, 10);
+						sample_buffer buffer(10, 10, get_reverse_channel());
 
 						HANDLE events[] = {
 							event_close_,
@@ -186,11 +187,12 @@ namespace app {
 		return rc;
 	}
 
-	bool worker_thread::run(HWND _window, const std::wstring &_render_name, const std::wstring &_capture_name)
+	bool worker_thread::run(HWND _window, const std::wstring &_render_name, const std::wstring &_capture_name, bool _reverse_channel)
 	{
 		window_ = _window;
 		render_name_ = _render_name;
 		capture_name_ = _capture_name;
+		reverse_channel_ = _reverse_channel;
 
 		// イベント生成
 		if (event_close_ == NULL) event_close_ = ::CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -215,7 +217,7 @@ namespace app {
 		}
 	}
 
-	void worker_thread::reset(const std::wstring& _render_name, const std::wstring& _capture_name)
+	void worker_thread::reset(const std::wstring& _render_name, const std::wstring& _capture_name, bool _reverse_channel)
 	{
 		if (thread_ != NULL)
 		{
@@ -223,6 +225,7 @@ namespace app {
 				std::lock_guard<std::mutex> lock(cfg_mtx_);
 				render_name_ = _render_name;
 				capture_name_ = _capture_name;
+				reverse_channel_ = _reverse_channel;
 			}
 			::SetEvent(event_reset_);
 		}
@@ -234,6 +237,15 @@ namespace app {
 		{
 			::SetEvent(event_stats_);
 		}
+	}
+
+	std::array<UINT64, 2> worker_thread::get_stats()
+	{
+		std::lock_guard<std::mutex> lock(stats_mtx_);
+		return {
+			stats_total_skip_,
+			stats_total_duplicate_
+		};
 	}
 
 	std::vector<std::wstring> worker_thread::get_render_names()
@@ -271,13 +283,10 @@ namespace app {
 		std::lock_guard<std::mutex> lock(cfg_mtx_);
 		return capture_name_;
 	}
-	
-	std::array<UINT64, 2> worker_thread::get_stats()
+
+	bool worker_thread::get_reverse_channel()
 	{
-		std::lock_guard<std::mutex> lock(stats_mtx_);
-		return {
-			stats_total_skip_,
-			stats_total_duplicate_
-		};
+		std::lock_guard<std::mutex> lock(cfg_mtx_);
+		return reverse_channel_;
 	}
 }

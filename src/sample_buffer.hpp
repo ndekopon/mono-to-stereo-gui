@@ -19,7 +19,7 @@ namespace app
 		UINT32 duplicate_threshold_;
 
 	public:
-		sample_buffer(UINT32, UINT32);
+		sample_buffer(UINT32, UINT32, bool);
 		~sample_buffer();
 
 		void set(BYTE *, UINT32);

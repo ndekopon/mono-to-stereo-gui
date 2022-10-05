@@ -65,7 +65,6 @@ namespace app {
 		return get_value(L"RENDER");
 	}
 
-
 	bool config_ini::set_capture_device(const std::wstring& _device)
 	{
 		return set_value(L"CAPTURE", _device);
@@ -74,5 +73,16 @@ namespace app {
 	std::wstring config_ini::get_capture_device()
 	{
 		return get_value(L"CAPTURE");
+	}
+
+	bool config_ini::set_reverse_channel(bool _reverse)
+	{
+		return set_value(L"REVERSE", _reverse ? L"1" : L"0");
+	}
+
+	bool config_ini::get_reverse_channel()
+	{
+		auto reverse = get_value(L"REVERSE");
+		return reverse == L"1" ? true : false;
 	}
 }
