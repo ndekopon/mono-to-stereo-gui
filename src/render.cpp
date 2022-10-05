@@ -132,6 +132,30 @@ namespace app {
 			false;
 		}
 
+		// バッファを埋める
+		UINT32 padding;
+		UINT32 available;
+		BYTE* data;
+		hr = client_->GetCurrentPadding(&padding);
+		if (hr != S_OK)
+		{
+			return false;
+		}
+		available = buffersize_ - padding;
+		if (available)
+		{
+			hr = render_client_->GetBuffer(available, &data);
+			if (hr != S_OK)
+			{
+				return false;
+			}
+			hr = render_client_->ReleaseBuffer(available, AUDCLNT_BUFFERFLAGS_SILENT);
+			if (hr != S_OK)
+			{
+				return false;
+			}
+		}
+
 		wlog("  started.");
 		return true;
 	}
@@ -148,10 +172,8 @@ namespace app {
 	bool render::proc_buffer(sample_buffer &_buffer)
 	{
 		HRESULT hr;
-		UINT32 readed;
 		UINT32 padding;
 		UINT32 available;
-		DWORD flags;
 		BYTE* data;
 
 		hr = client_->GetCurrentPadding(&padding);

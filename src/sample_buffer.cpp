@@ -76,8 +76,8 @@ namespace app
 	{
 		auto m = last_read_;
 		auto w = last_write_ / 2;
-		auto wl = (w + RENDER_SAMPLES - 960) % RENDER_SAMPLES;
-		auto wg = (w + RENDER_SAMPLES - 480) % RENDER_SAMPLES;
+		auto wl = (w + RENDER_SAMPLES - 480 * 2) % RENDER_SAMPLES;
+		auto wg = (w + RENDER_SAMPLES - 480 * 1) % RENDER_SAMPLES;
 		if (render_lesser((m + _frames) % RENDER_SAMPLES, wl))
 		{
 			m += 1;
