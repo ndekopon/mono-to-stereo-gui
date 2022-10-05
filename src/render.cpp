@@ -52,10 +52,11 @@ namespace app {
 		return names_;
 	}
 
-	bool render::start(const std::wstring& _name)
+	IAudioClient* render::get_client(const std::wstring& _name)
 	{
-		wlog("render::start");
 		int index = -1;
+		IAudioClient* client = nullptr;
+
 		for (size_t i = 0; i < names_.size(); ++i)
 		{
 			if (names_.at(i) == _name)
@@ -65,17 +66,40 @@ namespace app {
 				break;
 			}
 		}
-		if (index == -1)
+		if (index >= 0)
 		{
-			wlog("  render device is not matched or None.");
-			return false;
+			HRESULT hr;
+			hr = devices_.at(index)->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&client);
+			if (hr != S_OK)
+			{
+				wlog("  IMMDevice::Activate() failed.");
+			}
+		}
+		else
+		{
+			wlog("  capture device is not matched or None.");
 		}
 
-		HRESULT hr;
-		hr = devices_.at(index)->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&client_);
-		if (hr != S_OK)
+		// 不要になったdevicesの開放
+		for (auto device : devices_)
 		{
-			wlog("  IMMDevice::Activate() failed.");
+			device->Release();
+		}
+		devices_.clear();
+
+		return client;
+	}
+
+	bool render::start(const std::wstring& _name)
+	{
+		HRESULT hr;
+		wlog("render::start");
+
+		// クライアント取得
+		client_ = get_client(_name);
+		if (client_ == nullptr)
+		{
+			wlog("  capture::get_client() failed.");
 			return false;
 		}
 

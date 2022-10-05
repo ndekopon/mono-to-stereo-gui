@@ -23,6 +23,8 @@ namespace app
 		WAVEFORMATEX format_;
 		UINT32 buffersize_;
 
+		IAudioClient* get_client(const std::wstring &);
+
 	public:
 		capture();
 		~capture();

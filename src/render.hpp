@@ -24,6 +24,8 @@ namespace app
 		UINT32 buffersize_;
 		WORD blockalign_;
 
+		IAudioClient* get_client(const std::wstring&);
+
 	public:
 		render();
 		~render();
