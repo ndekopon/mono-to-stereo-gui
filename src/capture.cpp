@@ -176,30 +176,23 @@ namespace app {
 		DWORD flags;
 		BYTE *data;
 		UINT64 pcposition;
-		auto blockalign = format_.nBlockAlign;
-		hr = capture_client_->GetNextPacketSize(&packetsize);
-		if (hr != S_OK)
-		{
-			return false;
-		}
 
-		if (packetsize == 0)
-		{
-			return false;
-		}
+		hr = capture_client_->GetNextPacketSize(&packetsize);
+		if (hr == AUDCLNT_E_DEVICE_INVALIDATED) return false;
+		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
+		if (hr != S_OK) return true;
+		if (packetsize == 0) return true;
 
 		hr = capture_client_->GetBuffer(&data, &readed, &flags, NULL, &pcposition);
-		if (hr != S_OK)
-		{
-			return false;
-		}
+		if (hr == AUDCLNT_E_DEVICE_INVALIDATED) return false;
+		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
+		if (hr != S_OK) return true;
+
 		_buffer.set(data, readed);
 
 		hr = capture_client_->ReleaseBuffer(readed);
-		if (hr != S_OK)
-		{
-			return false;
-		}
+		if (hr == AUDCLNT_E_DEVICE_INVALIDATED) return false;
+		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
 
 		return true;
 	}

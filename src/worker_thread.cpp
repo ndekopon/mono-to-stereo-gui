@@ -98,11 +98,17 @@ namespace app {
 							}
 							else if (id == WAIT_OBJECT_0 + 2)
 							{
-								ren.proc_buffer(buffer);
+								if (!ren.proc_buffer(buffer))
+								{
+									wlog("render::proc_buffer() failed.");
+								}
 							}
 							else if (id == WAIT_OBJECT_0 + 3)
 							{
-								cap.proc_buffer(buffer);
+								if (!cap.proc_buffer(buffer))
+								{
+									wlog("capture::proc_buffer() failed.");
+								}
 							}
 							else if (id == WAIT_OBJECT_0 + 4)
 							{

@@ -201,24 +201,23 @@ namespace app {
 		BYTE* data;
 
 		hr = client_->GetCurrentPadding(&padding);
-		if (hr != S_OK)
-		{
-			return false;
-		}
+		if (hr == AUDCLNT_E_DEVICE_INVALIDATED) return false;
+		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
+		if (hr != S_OK) return true;
+
 		available = buffersize_ - padding;
+		if (available == 0) return true;
+
 		hr = render_client_->GetBuffer(available, &data);
-		if (hr != S_OK)
-		{
-			return false;
-		}
+		if (hr == AUDCLNT_E_DEVICE_INVALIDATED) return false;
+		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
+		if (hr != S_OK) return true;
 
 		_buffer.get(data, available);
 
 		hr = render_client_->ReleaseBuffer(available, 0);
-		if (hr != S_OK)
-		{
-			return false;
-		}
+		if (hr == AUDCLNT_E_DEVICE_INVALIDATED) return false;
+		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
 
 		return true;
 	}
