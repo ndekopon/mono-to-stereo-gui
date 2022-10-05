@@ -44,7 +44,6 @@ namespace app
 
 	const wchar_t* main_window::window_class_ = L"mono-to-stereo-gui-mainwindow";
 	const wchar_t* main_window::window_title_ = L"mono-to-stereo-gui";
-	const wchar_t* main_window::window_mutex_ = L"mono-to-stereo-guimutex";
 
 
 	main_window::main_window(HINSTANCE _instance)
@@ -66,13 +65,6 @@ namespace app
 
 	bool main_window::init()
 	{
-
-		HANDLE mutex = ::CreateMutexW(NULL, TRUE, window_mutex_);
-		if (::GetLastError() == ERROR_ALREADY_EXISTS)
-		{
-			return false;
-		}
-
 		disable_ime();
 
 		set_dpi_awareness();
