@@ -4,8 +4,6 @@
 
 MS2109系USBキャプチャを使っているユーザー向け[mono-to-stereo](https://github.com/ToadKing/mono-to-stereo)のGUI操作版。
 
-![image](https://user-images.githubusercontent.com/92087784/193593505-111b864e-fe1a-4d71-8e2c-73be9d952ec4.png)
-
 
 ## インストール方法
 
@@ -18,16 +16,17 @@ Releasesから自分のPCにあったアーキテクチャ(x86/x64/arm/arm64)の
 
 ## 使い方
 
+### 基本
+
 起動するとタスクトレイに常駐する。
 
 右クリックメニューから`capture`(入力)を選択する。
 
-![image](https://user-images.githubusercontent.com/92087784/193987590-5a317cef-4605-4373-8363-1cf28b775e8b.png)
+![image](https://user-images.githubusercontent.com/92087784/194231996-b46a864f-a94a-40bd-b599-891eff74331b.png)
 
 右クリックメニューから`render`(出力)を選択する。
 
-![image](https://user-images.githubusercontent.com/92087784/193987872-15e0bd99-b6bc-488b-833d-d9bdacb0dd08.png)
-
+![image](https://user-images.githubusercontent.com/92087784/194232196-f818a143-ba69-4ae0-8ee5-bfdd83850a72.png)
 
 選択時、両方が有効であればモノラル→ステレオの変換が開始される。
 
@@ -35,7 +34,20 @@ Releasesから自分のPCにあったアーキテクチャ(x86/x64/arm/arm64)の
 
 終了する際は、右クリックメニューから`exit`を選択する。
 
-![image](https://user-images.githubusercontent.com/92087784/193988123-650e6a48-9240-4823-be2d-3c182714883a.png)
+![image](https://user-images.githubusercontent.com/92087784/194233720-4f2e5948-6864-4622-9200-efaaebb6f71a.png)
+
+
+### L/R反転
+
+L/Rが逆に聞こえる場合、右クリックメニューから`reverse channel`を選択する。
+
+![image](https://user-images.githubusercontent.com/92087784/194232915-0b4f5e5a-ab4c-4260-938d-e5b7b19a30a7.png)
+
+### 音量を変える
+
+音量を調節したい場合、右クリックメニューの`volume`から選択する。
+
+![image](https://user-images.githubusercontent.com/92087784/194233329-ad27d0e0-8d90-446a-b61a-72f131c47156.png)
 
 
 ## 問題点
