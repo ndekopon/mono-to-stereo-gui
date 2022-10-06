@@ -23,6 +23,7 @@ namespace app
 		std::vector<std::wstring> render_names_;
 		std::vector<std::wstring> capture_names_;
 		bool reverse_channel_;
+		UINT32 volume_;
 
 		static const wchar_t* window_class_;
 		static const wchar_t* window_title_;
@@ -38,6 +39,7 @@ namespace app
 		void menu_create();
 		void submenu_render_create(HMENU);
 		void submenu_capture_create(HMENU);
+		void submenu_volume_create(HMENU);
 
 		LRESULT window_proc(UINT, WPARAM, LPARAM);
 		static LRESULT CALLBACK window_proc_common(HWND, UINT, WPARAM, LPARAM);

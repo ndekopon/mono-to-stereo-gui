@@ -28,5 +28,8 @@ namespace app
 
 		bool set_reverse_channel(bool);
 		bool get_reverse_channel();
+
+		bool set_volume(UINT32);
+		UINT32 get_volume();
 	};
 }

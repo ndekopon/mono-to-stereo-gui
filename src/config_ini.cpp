@@ -85,4 +85,28 @@ namespace app {
 		auto reverse = get_value(L"REVERSE");
 		return reverse == L"1" ? true : false;
 	}
+
+	bool config_ini::set_volume(UINT32 _v)
+	{
+		// 0～10に変換して書き込む
+		_v = _v / 10;
+		if (_v > 10) _v = 10;
+		return set_value(L"VOLUME", std::to_wstring(_v));
+	}
+
+	UINT32 config_ini::get_volume()
+	{
+		auto s = get_value(L"VOLUME");
+		if      (s == L"0") return  0;
+		else if (s == L"1") return 10;
+		else if (s == L"2") return 20;
+		else if (s == L"3") return 30;
+		else if (s == L"4") return 40;
+		else if (s == L"5") return 50;
+		else if (s == L"6") return 60;
+		else if (s == L"7") return 70;
+		else if (s == L"8") return 80;
+		else if (s == L"9") return 90;
+		else return 100;
+	}
 }

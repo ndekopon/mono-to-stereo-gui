@@ -20,11 +20,12 @@ namespace app
 		std::vector<std::wstring> names_;
 		IAudioClient* client_;
 		IAudioRenderClient* render_client_;
+		ISimpleAudioVolume* volume_;
 		WAVEFORMATEX format_;
 		UINT32 buffersize_;
 		WORD blockalign_;
 
-		IAudioClient* get_client(const std::wstring&);
+		bool get_client_and_volume(const std::wstring&);
 
 	public:
 		render();
@@ -40,10 +41,12 @@ namespace app
 		render& operator = (render&&) = delete;
 
 		bool init();
-		bool start(const std::wstring&);
+		bool start(const std::wstring&, UINT32);
 		void stop();
 
 		bool proc_buffer(sample_buffer &);
+
+		void set_volume(UINT32);
 
 		const std::vector<std::wstring> get_names() const;
 	};

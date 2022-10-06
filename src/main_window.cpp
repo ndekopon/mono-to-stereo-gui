@@ -42,6 +42,7 @@ namespace app
 	constexpr UINT MID_RENDER_0 = 32;
 	constexpr UINT MID_CAPTURE_NONE = 63;
 	constexpr UINT MID_CAPTURE_0 = 64;
+	constexpr UINT MID_SET_VOLUME_0 = 96;
 
 	const wchar_t* main_window::window_class_ = L"mono-to-stereo-gui-mainwindow";
 	const wchar_t* main_window::window_title_ = L"mono-to-stereo-gui";
@@ -58,6 +59,7 @@ namespace app
 		, render_names_()
 		, capture_names_()
 		, reverse_channel_(false)
+		, volume_(100)
 	{
 	}
 
@@ -201,11 +203,20 @@ namespace app
 		menu_checkeditem_create(_menu, MID_CAPTURE_NONE, L"None", index == -1);
 	}
 
+	void main_window::submenu_volume_create(HMENU _menu)
+	{
+		for (int i = 10; i >= 0; --i)
+		{
+			menu_checkeditem_create(_menu, MID_SET_VOLUME_0 + i, std::to_wstring(i * 10) + L"%", volume_ == i * 10);
+		}
+	}
+
 	void main_window::menu_create()
 	{
 		HMENU menu;
-		HMENU menu_capture;
 		HMENU menu_render;
+		HMENU menu_capture;
+		HMENU menu_volume;
 		POINT pt;
 		MENUITEMINFO mi = { 0 };
 		mi.cbSize = sizeof(MENUITEMINFO);
@@ -214,10 +225,12 @@ namespace app
 		menu = ::CreatePopupMenu();
 		menu_render = ::CreatePopupMenu();
 		menu_capture = ::CreatePopupMenu();
+		menu_volume = ::CreatePopupMenu();
 
 		// サブメニュー作成
 		submenu_render_create(menu_render);
 		submenu_capture_create(menu_capture);
+		submenu_volume_create(menu_volume);
 
 		// Render
 		WCHAR menu_render_string[] = L"render";
@@ -231,6 +244,13 @@ namespace app
 		mi.fMask = MIIM_SUBMENU | MIIM_STRING;
 		mi.hSubMenu = menu_capture;
 		mi.dwTypeData = menu_capture_string;
+		::InsertMenuItemW(menu, -1, TRUE, &mi);
+
+		// Volume
+		WCHAR menu_volume_string[] = L"volume";
+		mi.fMask = MIIM_SUBMENU | MIIM_STRING;
+		mi.hSubMenu = menu_volume;
+		mi.dwTypeData = menu_volume_string;
 		::InsertMenuItemW(menu, -1, TRUE, &mi);
 
 		// reverse channel
@@ -261,6 +281,7 @@ namespace app
 		::TrackPopupMenu(menu, TPM_BOTTOMALIGN, pt.x, pt.y, 0, window_, NULL);
 
 		// ハンドルは削除
+		::DestroyMenu(menu_volume);
 		::DestroyMenu(menu_capture);
 		::DestroyMenu(menu_render);
 		::DestroyMenu(menu);
@@ -278,9 +299,10 @@ namespace app
 			render_name_ = config_ini_.get_render_device();
 			capture_name_ = config_ini_.get_capture_device();
 			reverse_channel_ = config_ini_.get_reverse_channel();
+			volume_ = config_ini_.get_volume();
 
 			// スレッド開始
-			if (!worker_thread_.run(window_, render_name_, capture_name_, reverse_channel_)) return -1;
+			if (!worker_thread_.run(window_, render_name_, capture_name_, reverse_channel_, volume_)) return -1;
 
 			// タイマー設定
 			::SetTimer(window_, 1, 1000, nullptr);
@@ -322,13 +344,13 @@ namespace app
 				}
 				if (id == MID_RESET)
 				{
-					worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
+					worker_thread_.reset(render_name_, capture_name_, reverse_channel_, volume_);
 				}
 				if (id == MID_TOGGLE_REVERSE_CHANNEL)
 				{
 					reverse_channel_ = !reverse_channel_;
 					config_ini_.set_reverse_channel(reverse_channel_);
-					worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
+					worker_thread_.reset(render_name_, capture_name_, reverse_channel_, volume_);
 				}
 				if (MID_RENDER_NONE <= id && id < MID_RENDER_0 + render_names_.size())
 				{
@@ -342,7 +364,7 @@ namespace app
 					{
 						render_name_ = new_device;
 						config_ini_.set_render_device(render_name_);
-						worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
+						worker_thread_.reset(render_name_, capture_name_, reverse_channel_, volume_);
 					}
 				}
 				if (MID_CAPTURE_NONE <= id && id < MID_CAPTURE_0 + capture_names_.size())
@@ -357,7 +379,17 @@ namespace app
 					{
 						capture_name_ = new_device;
 						config_ini_.set_capture_device(capture_name_);
-						worker_thread_.reset(render_name_, capture_name_, reverse_channel_);
+						worker_thread_.reset(render_name_, capture_name_, reverse_channel_, volume_);
+					}
+				}
+				if (MID_SET_VOLUME_0 <= id && id <= MID_SET_VOLUME_0 + 10)
+				{
+					UINT32 volume = (id - MID_SET_VOLUME_0) * 10;
+					if (volume_ != volume)
+					{
+						volume_ = volume;
+						config_ini_.set_volume(volume_);
+						worker_thread_.set_volume(volume_);
 					}
 				}
 			}

@@ -21,10 +21,12 @@ namespace app {
 		, stats_mtx_()
 		, render_names_()
 		, capture_names_()
+		, volume_(100)
 		, reverse_channel_(false)
 		, event_close_(NULL)
 		, event_reset_(NULL)
 		, event_stats_(NULL)
+		, event_volume_(NULL)
 		, stats_total_skip_(0)
 		, stats_total_duplicate_(0)
 	{
@@ -36,6 +38,7 @@ namespace app {
 		if (event_close_) ::CloseHandle(event_close_);
 		if (event_reset_) ::CloseHandle(event_reset_);
 		if (event_stats_) ::CloseHandle(event_stats_);
+		if (event_volume_) ::CloseHandle(event_volume_);
 	}
 
 	DWORD WINAPI worker_thread::proc_common(LPVOID _p)
@@ -62,7 +65,7 @@ namespace app {
 
 			if (cap.start(get_capture_name()))
 			{
-				if (ren.start(get_render_name()))
+				if (ren.start(get_render_name(), get_volume()))
 				{
 
 					// 優先度を設定
@@ -77,7 +80,8 @@ namespace app {
 							event_reset_,
 							ren.event_,
 							cap.event_,
-							event_stats_
+							event_stats_,
+							event_volume_
 						};
 
 						while (true)
@@ -131,6 +135,10 @@ namespace app {
 								{
 									wlog("skip=" + std::to_string(sc) + " duplicate=" + std::to_string(dc));
 								}
+							}
+							else if (id == WAIT_OBJECT_0 + 5) // volume変更
+							{
+								ren.set_volume(get_volume());
 							}
 						}
 						AvRevertMmThreadCharacteristics(task);
@@ -187,12 +195,13 @@ namespace app {
 		return rc;
 	}
 
-	bool worker_thread::run(HWND _window, const std::wstring &_render_name, const std::wstring &_capture_name, bool _reverse_channel)
+	bool worker_thread::run(HWND _window, const std::wstring &_render_name, const std::wstring &_capture_name, bool _reverse_channel, UINT32 _volume)
 	{
 		window_ = _window;
 		render_name_ = _render_name;
 		capture_name_ = _capture_name;
 		reverse_channel_ = _reverse_channel;
+		volume_ = _volume;
 
 		// イベント生成
 		if (event_close_ == NULL) event_close_ = ::CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -201,6 +210,8 @@ namespace app {
 		if (event_reset_ == NULL) return false;
 		if (event_stats_ == NULL) event_stats_ = ::CreateEventW(NULL, FALSE, FALSE, NULL);
 		if (event_stats_ == NULL) return false;
+		if (event_volume_ == NULL) event_volume_ = ::CreateEventW(NULL, FALSE, FALSE, NULL);
+		if (event_volume_ == NULL) return false;
 
 		// スレッド起動
 		thread_ = ::CreateThread(NULL, 0, proc_common, this, 0, NULL);
@@ -217,7 +228,7 @@ namespace app {
 		}
 	}
 
-	void worker_thread::reset(const std::wstring& _render_name, const std::wstring& _capture_name, bool _reverse_channel)
+	void worker_thread::reset(const std::wstring& _render_name, const std::wstring& _capture_name, bool _reverse_channel, UINT32 _volume)
 	{
 		if (thread_ != NULL)
 		{
@@ -226,6 +237,7 @@ namespace app {
 				render_name_ = _render_name;
 				capture_name_ = _capture_name;
 				reverse_channel_ = _reverse_channel;
+				volume_ = _volume;
 			}
 			::SetEvent(event_reset_);
 		}
@@ -288,5 +300,24 @@ namespace app {
 	{
 		std::lock_guard<std::mutex> lock(cfg_mtx_);
 		return reverse_channel_;
+	}
+
+	void worker_thread::set_volume(UINT32 _v)
+	{
+		if (_v > 100) _v = 100;
+		{
+			std::lock_guard<std::mutex> lock(cfg_mtx_);
+			volume_ = _v;
+		}
+		if (event_volume_)
+		{
+			::SetEvent(event_volume_);
+		}
+	}
+
+	UINT32 worker_thread::get_volume()
+	{
+		std::lock_guard<std::mutex> lock(cfg_mtx_);
+		return volume_;
 	}
 }

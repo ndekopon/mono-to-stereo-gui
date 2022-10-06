@@ -3,6 +3,8 @@
 #include "log.hpp"
 #include "mmdevice-utils.hpp"
 
+#include <audiopolicy.h>
+
 namespace app {
 
 
@@ -11,6 +13,7 @@ namespace app {
 		, names_()
 		, client_(nullptr)
 		, render_client_(nullptr)
+		, volume_(nullptr)
 		, format_({ WAVE_FORMAT_IEEE_FLOAT, RENDER_CHANNELS, RENDER_SAMPLES, RENDER_SAMPLES * RENDER_CHANNELS * 4, RENDER_CHANNELS * 4, 32, 0 })
 		, event_(NULL)
 		, buffersize_(0)
@@ -20,6 +23,7 @@ namespace app {
 
 	render::~render()
 	{
+		if (volume_) volume_->Release();
 		if (render_client_) render_client_->Release();
 		if (client_) client_->Release();
 		for (auto& device : devices_) device->Release();
@@ -52,10 +56,10 @@ namespace app {
 		return names_;
 	}
 
-	IAudioClient* render::get_client(const std::wstring& _name)
+	bool render::get_client_and_volume(const std::wstring& _name)
 	{
+		bool rc = false;
 		int index = -1;
-		IAudioClient* client = nullptr;
 
 		for (size_t i = 0; i < names_.size(); ++i)
 		{
@@ -69,11 +73,30 @@ namespace app {
 		if (index >= 0)
 		{
 			HRESULT hr;
-			hr = devices_.at(index)->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&client);
+			IAudioSessionManager* manager = nullptr;
+
+			hr = devices_.at(index)->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&client_);
 			if (hr != S_OK)
 			{
-				wlog("  IMMDevice::Activate() failed.");
+				wlog("  IMMDevice::Activate(IAudioClient) failed.");
 			}
+
+			hr = devices_.at(index)->Activate(__uuidof(IAudioSessionManager), CLSCTX_ALL, NULL, (void**)&manager);
+			if (hr == S_OK)
+			{
+				hr = manager->GetSimpleAudioVolume(NULL, FALSE, &volume_);
+				if (hr != S_OK)
+				{
+					wlog("  IAudioSessionManager::GetSimpleAudioVolume() failed.");
+				}
+				manager->Release();
+			}
+			else
+			{
+				wlog("  IMMDevice::Activate(IAudioSessionManager) failed.");
+			}
+
+			if (client_ && volume_) rc = true;
 		}
 		else
 		{
@@ -87,21 +110,23 @@ namespace app {
 		}
 		devices_.clear();
 
-		return client;
+		return rc;
 	}
 
-	bool render::start(const std::wstring& _name)
+	bool render::start(const std::wstring& _name, UINT32 _v)
 	{
 		HRESULT hr;
 		wlog("render::start");
 
-		// クライアント取得
-		client_ = get_client(_name);
-		if (client_ == nullptr)
+		// クライアントとボリューム取得
+		if (!get_client_and_volume(_name))
 		{
-			wlog("  capture::get_client() failed.");
+			wlog("  render::get_client_and_volume() failed.");
 			return false;
 		}
+
+		// ボリューム設定
+		set_volume(_v);
 
 		// Period取得
 		REFERENCE_TIME period_default;
@@ -220,5 +245,11 @@ namespace app {
 		if (hr == AUDCLNT_E_SERVICE_NOT_RUNNING) return false;
 
 		return true;
+	}
+
+	void render::set_volume(UINT32 _v)
+	{
+		if (_v > 100) _v = 100;
+		if (volume_) volume_->SetMasterVolume(_v / 100.0f, FALSE);
 	}
 }
