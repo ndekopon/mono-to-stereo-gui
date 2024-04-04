@@ -63,20 +63,45 @@ namespace app
 	void sample_buffer::get(BYTE* _data, UINT32 _frames)
 	{
 		auto m = last_read_;
-		auto w = last_write_ / 2;
-		auto wl = (w + RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * skip_threshold_) % RENDER_SAMPLES;
-		auto wg = (w + RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * duplicate_threshold_) % RENDER_SAMPLES;
-		if (render_lesser((m + _frames) % RENDER_SAMPLES, wl))
+		const auto w = last_write_ / 2;
+		const auto w_s = (w + RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * skip_threshold_) % RENDER_SAMPLES;
+		const auto w_d = (w + RENDER_SAMPLES - (RENDER_SAMPLES / 1000) * duplicate_threshold_) % RENDER_SAMPLES;
+		const auto next_m = (m + _frames) % RENDER_SAMPLES;
+
+		if (w_s < w_d)
 		{
-			m += 1;
-			m %= RENDER_SAMPLES;
-			skip_count_++;
+			if (render_lesser(next_m, w_s))
+			{
+				m += 1;
+				m %= RENDER_SAMPLES;
+				skip_count_++;
+			}
+			else if (render_greater(next_m, w_d))
+			{
+				m += RENDER_SAMPLES - 1;
+				m %= RENDER_SAMPLES;
+				duplicate_count_++;
+			}
 		}
-		else if (render_greater((m + _frames) % RENDER_SAMPLES, wg))
+		else if (w_d < w_s)
 		{
-			m += RENDER_SAMPLES - 1;
-			m %= RENDER_SAMPLES;
-			duplicate_count_++;
+			if (render_greater(next_m, w_d) && render_lesser(next_m, w_s))
+			{
+				const auto a = w_s - next_m;
+				const auto b = next_m - w_d;
+				if (a > b)
+				{
+					m += RENDER_SAMPLES - 1;
+					m %= RENDER_SAMPLES;
+					duplicate_count_++;
+				}
+				else
+				{
+					m += 1;
+					m %= RENDER_SAMPLES;
+					skip_count_++;
+				}
+			}
 		}
 
 		if (m + _frames > RENDER_SAMPLES)
