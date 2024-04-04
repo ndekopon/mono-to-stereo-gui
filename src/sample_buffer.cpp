@@ -19,20 +19,6 @@ namespace
 		if (_b < RENDER_LOWER && RENDER_HIGHER < _a) return false;
 		return _a > _b;
 	}
-
-	INT32 render_diff(uint64_t _a, uint64_t _b)
-	{
-		if (render_lesser(_a, _b))
-		{
-			if (_a < _b) return -static_cast<INT32>(_b - _a);
-			else return -static_cast<INT32>(_b + app::RENDER_SAMPLES - _a);
-		}
-		else
-		{
-			if (_a > _b) return static_cast<INT32>(_a - _b);
-			else return static_cast<INT32>(_a + app::RENDER_SAMPLES - _b);
-		}
-	}
 }
 
 
