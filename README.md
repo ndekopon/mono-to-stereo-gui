@@ -22,11 +22,11 @@ Releasesから自分のPCにあったアーキテクチャ(x86/x64/arm/arm64)の
 
 右クリックメニューから`capture`(入力)を選択する。
 
-![image](https://user-images.githubusercontent.com/92087784/194231996-b46a864f-a94a-40bd-b599-891eff74331b.png)
+![image](https://user-images.githubusercontent.com/92087784/194232196-f818a143-ba69-4ae0-8ee5-bfdd83850a72.png)
 
 右クリックメニューから`render`(出力)を選択する。
 
-![image](https://user-images.githubusercontent.com/92087784/194232196-f818a143-ba69-4ae0-8ee5-bfdd83850a72.png)
+![image](https://user-images.githubusercontent.com/92087784/194231996-b46a864f-a94a-40bd-b599-891eff74331b.png)
 
 選択時、両方が有効であればモノラル→ステレオの変換が開始される。
 
